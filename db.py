@@ -165,6 +165,15 @@ def get_watchers(user_id: int) -> list[int]:
         return [r["watcher_id"] for r in rows]
 
 
+def has_watchers(user_id: int) -> bool:
+    """Check if a user has at least one watcher."""
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT 1 FROM recipients WHERE user_id = ? LIMIT 1", (user_id,)
+        ).fetchone()
+        return row is not None
+
+
 def get_watching(watcher_id: int) -> list[dict]:
     """Get list of users that watcher_id is watching (with their info)."""
     with get_db() as conn:

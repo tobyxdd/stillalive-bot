@@ -40,6 +40,8 @@ async def send_daily_reminders(context: ContextTypes.DEFAULT_TYPE):
     users = db.get_all_users()
     for user in users:
         if user.get("reminder_hour") == current_hour:
+            if not db.has_watchers(user["user_id"]):
+                continue
             ln = user.get("language", "en")
             try:
                 await context.bot.send_message(user["user_id"], t(ln, "reminder_daily"))
@@ -51,6 +53,8 @@ async def send_deadline_reminders(context: ContextTypes.DEFAULT_TYPE):
     """Send reminders to users approaching their deadline."""
     users = db.get_users_needing_deadline_reminder()
     for user in users:
+        if not db.has_watchers(user["user_id"]):
+            continue
         ln = user.get("language", "en")
         # Calculate hours remaining
         last = user.get("last_checkin")
