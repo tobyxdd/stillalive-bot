@@ -1,0 +1,11 @@
+[project]
+name = "stillalive-bot"
+version = "0.1.0"
+description = "StillAlive Telegram Bot"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "black>=26.1.0",
+    "isort>=7.0.0",
+    "python-telegram-bot[job-queue]>=22.5",
+]
