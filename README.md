@@ -2,6 +2,8 @@
 
 A Telegram dead man's switch. Check in regularly - if you miss your deadline, your designated watchers are notified.
 
+[![Still Alive Bot](bot.png)](https://t.me/salive_bot)
+
 ## How it works
 
 1. Add a watcher via `/invite` — share the link with someone you trust
