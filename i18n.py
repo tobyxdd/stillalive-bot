@@ -65,6 +65,13 @@ STRINGS = {
         "stopped_watching": "You stopped watching {name}.",
         "watcher_left": "{name} is no longer watching you.",
         "not_set": "(not set)",
+        "pin_enter": "Enter your PIN to check in:\n\n{dots}",
+        "pin_setup_enter": "Set a new 4-digit PIN:\n\n{dots}",
+        "pin_wrong": "Wrong PIN. Try again:\n\n{dots}",
+        "pin_set": "PIN protection enabled.",
+        "pin_cleared": "PIN protection removed.",
+        "btn_set_pin": "Set PIN",
+        "btn_clear_pin": "Clear PIN",
     },
     "zh": {
         "welcome": (
@@ -132,6 +139,13 @@ STRINGS = {
         "stopped_watching": "你已停止守望 {name}。",
         "watcher_left": "{name} 不再守望你了。",
         "not_set": "(未设置)",
+        "pin_enter": "请输入 PIN 码以签到:\n\n{dots}",
+        "pin_setup_enter": "设置新的4位 PIN 码:\n\n{dots}",
+        "pin_wrong": "PIN 码错误,请重试:\n\n{dots}",
+        "pin_set": "PIN 码保护已启用。",
+        "pin_cleared": "PIN 码保护已关闭。",
+        "btn_set_pin": "设置 PIN 码",
+        "btn_clear_pin": "清除 PIN 码",
     },
 }
 

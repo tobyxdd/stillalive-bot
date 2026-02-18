@@ -11,6 +11,25 @@ from i18n import t
 SET_MESSAGE = 1
 
 
+def _pin_dots(entered: int) -> str:
+    return "● " * entered + "○ " * (4 - entered)
+
+
+def _pin_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton(str(d), callback_data=f"pin_{d}") for d in [1, 2, 3]],
+            [InlineKeyboardButton(str(d), callback_data=f"pin_{d}") for d in [4, 5, 6]],
+            [InlineKeyboardButton(str(d), callback_data=f"pin_{d}") for d in [7, 8, 9]],
+            [
+                InlineKeyboardButton("✕", callback_data="pin_cancel"),
+                InlineKeyboardButton("0", callback_data="pin_0"),
+                InlineKeyboardButton("⌫", callback_data="pin_back"),
+            ],
+        ]
+    )
+
+
 def lang(user_id: int) -> str:
     user = db.get_user(user_id)
     return user["language"] if user else "en"
@@ -67,6 +86,14 @@ async def cmd_checkin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not db.has_watchers(user_id):
         await update.message.reply_text(t(ln, "setup_needed"))
         return
+    if db.get_pin_hash(user_id):
+        context.user_data["pin_purpose"] = "checkin"
+        context.user_data["pin_digits"] = ""
+        await update.message.reply_text(
+            t(ln, "pin_enter", dots=_pin_dots(0)),
+            reply_markup=_pin_keyboard(),
+        )
+        return
     db.checkin(user_id)
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     await update.message.reply_text(t(ln, "checkin_done", time=now))
@@ -105,6 +132,12 @@ async def cmd_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ),
         ],
         [InlineKeyboardButton(t(ln, "btn_edit_message"), callback_data="set_message")],
+        [
+            InlineKeyboardButton(
+                t(ln, "btn_clear_pin" if db.get_pin_hash(user_id) else "btn_set_pin"),
+                callback_data="clear_pin" if db.get_pin_hash(user_id) else "set_pin",
+            )
+        ],
     ]
     await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
@@ -160,6 +193,16 @@ async def cb_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "set_message":
         await query.edit_message_text(t(ln, "set_message"))
         context.user_data["awaiting_message"] = True
+    elif data == "set_pin":
+        context.user_data["pin_purpose"] = "setup"
+        context.user_data["pin_digits"] = ""
+        await query.edit_message_text(
+            t(ln, "pin_setup_enter", dots=_pin_dots(0)),
+            reply_markup=_pin_keyboard(),
+        )
+    elif data == "clear_pin":
+        db.clear_pin(user_id)
+        await query.edit_message_text(t(ln, "pin_cleared"))
     elif data.startswith("interval_"):
         val = int(data.split("_")[1])
         db.upsert_user(user_id, interval_hours=val)
@@ -187,6 +230,60 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db.upsert_user(user_id, message=update.message.text)
     context.user_data["awaiting_message"] = False
     await update.message.reply_text(t(ln, "message_saved"))
+
+
+async def cb_pin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    user_id = update.effective_user.id
+    ln = lang(user_id)
+    action = query.data  # e.g. "pin_3", "pin_back", "pin_cancel"
+
+    if action == "pin_cancel":
+        context.user_data.pop("pin_purpose", None)
+        context.user_data.pop("pin_digits", None)
+        await query.delete_message()
+        return
+
+    digits: str = context.user_data.get("pin_digits", "")
+    purpose: str = context.user_data.get("pin_purpose", "checkin")
+
+    if action == "pin_back":
+        digits = digits[:-1]
+    else:
+        digit = action.split("_")[1]
+        if len(digits) < 4:
+            digits += digit
+
+    context.user_data["pin_digits"] = digits
+
+    if len(digits) < 4:
+        prompt_key = "pin_setup_enter" if purpose == "setup" else "pin_enter"
+        await query.edit_message_text(
+            t(ln, prompt_key, dots=_pin_dots(len(digits))),
+            reply_markup=_pin_keyboard(),
+        )
+        return
+
+    # 4 digits entered — act on purpose
+    if purpose == "setup":
+        db.set_pin(user_id, digits)
+        context.user_data.pop("pin_purpose", None)
+        context.user_data.pop("pin_digits", None)
+        await query.edit_message_text(t(ln, "pin_set"))
+    elif purpose == "checkin":
+        if db.verify_pin(user_id, digits):
+            db.checkin(user_id)
+            context.user_data.pop("pin_purpose", None)
+            context.user_data.pop("pin_digits", None)
+            now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+            await query.edit_message_text(t(ln, "checkin_done", time=now))
+        else:
+            context.user_data["pin_digits"] = ""
+            await query.edit_message_text(
+                t(ln, "pin_wrong", dots=_pin_dots(0)),
+                reply_markup=_pin_keyboard(),
+            )
 
 
 async def cmd_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):

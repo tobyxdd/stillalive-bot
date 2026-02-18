@@ -1,39 +1,45 @@
+import hashlib
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
 from config import DB_PATH
 
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS users (
-    user_id INTEGER PRIMARY KEY,
-    username TEXT,
-    message TEXT,
-    interval_hours INTEGER DEFAULT 24,
-    deadline_hours INTEGER DEFAULT 48,
-    reminder_hour INTEGER DEFAULT 9,
-    reminder_before INTEGER DEFAULT 6,
-    last_checkin TIMESTAMP,
-    alerted INTEGER DEFAULT 0,
-    language TEXT DEFAULT 'en',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS recipients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    watcher_id INTEGER NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    UNIQUE(user_id, watcher_id)
-);
-
-CREATE TABLE IF NOT EXISTS invites (
-    code TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-);
-"""
+# Each entry is a migration that brings the DB from version (index) to (index+1).
+# Never edit existing entries — only append new ones.
+MIGRATIONS = [
+    # v0 → v1: initial schema
+    """
+    CREATE TABLE IF NOT EXISTS users (
+        user_id INTEGER PRIMARY KEY,
+        username TEXT,
+        message TEXT,
+        interval_hours INTEGER DEFAULT 24,
+        deadline_hours INTEGER DEFAULT 48,
+        reminder_hour INTEGER DEFAULT 9,
+        reminder_before INTEGER DEFAULT 6,
+        last_checkin TIMESTAMP,
+        alerted INTEGER DEFAULT 0,
+        language TEXT DEFAULT 'en',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS recipients (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        watcher_id INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(user_id),
+        UNIQUE(user_id, watcher_id)
+    );
+    CREATE TABLE IF NOT EXISTS invites (
+        code TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+    );
+    """,
+    # v1 → v2: add PIN protection
+    "ALTER TABLE users ADD COLUMN pin_hash TEXT;",
+]
 
 
 @contextmanager
@@ -49,7 +55,10 @@ def get_db():
 
 def init_db():
     with get_db() as conn:
-        conn.executescript(SCHEMA)
+        version = conn.execute("PRAGMA user_version").fetchone()[0]
+        for i, migration in enumerate(MIGRATIONS[version:], start=version):
+            conn.executescript(migration)
+            conn.execute(f"PRAGMA user_version = {i + 1}")
 
 
 def get_user(user_id: int) -> dict | None:
@@ -208,3 +217,37 @@ def get_all_users() -> list[dict]:
     with get_db() as conn:
         rows = conn.execute("SELECT * FROM users").fetchall()
         return [dict(r) for r in rows]
+
+
+def _hash_pin(user_id: int, pin: str) -> str:
+    return hashlib.pbkdf2_hmac(
+        "sha256", pin.encode(), str(user_id).encode(), 100_000
+    ).hex()
+
+
+def set_pin(user_id: int, pin: str):
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE users SET pin_hash = ? WHERE user_id = ?",
+            (_hash_pin(user_id, pin), user_id),
+        )
+
+
+def get_pin_hash(user_id: int) -> str | None:
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT pin_hash FROM users WHERE user_id = ?", (user_id,)
+        ).fetchone()
+        return row["pin_hash"] if row else None
+
+
+def verify_pin(user_id: int, pin: str) -> bool:
+    stored = get_pin_hash(user_id)
+    if not stored:
+        return False
+    return stored == _hash_pin(user_id, pin)
+
+
+def clear_pin(user_id: int):
+    with get_db() as conn:
+        conn.execute("UPDATE users SET pin_hash = NULL WHERE user_id = ?", (user_id,))

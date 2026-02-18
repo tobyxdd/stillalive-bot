@@ -41,9 +41,11 @@ def main():
     app.add_handler(CommandHandler("lang", handlers.cmd_lang))
 
     # Callback query handlers
+    app.add_handler(CallbackQueryHandler(handlers.cb_pin, pattern=r"^pin_"))
     app.add_handler(
         CallbackQueryHandler(
-            handlers.cb_settings, pattern=r"^(set_|interval_|deadline_|rhour_|rbefore_)"
+            handlers.cb_settings,
+            pattern=r"^(set_|clear_pin|interval_|deadline_|rhour_|rbefore_)",
         )
     )
     app.add_handler(
