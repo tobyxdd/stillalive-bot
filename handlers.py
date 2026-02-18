@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
@@ -62,31 +62,14 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_checkin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    ln = lang(update.effective_user.id)
-    keyboard = [
-        [
-            InlineKeyboardButton(t(ln, "checkin_btn"), callback_data="checkin_confirm"),
-            InlineKeyboardButton(t(ln, "cancel"), callback_data="checkin_cancel"),
-        ]
-    ]
-    await update.message.reply_text(
-        t(ln, "checkin_prompt"),
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
-
-
-async def cb_checkin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
     user_id = update.effective_user.id
     ln = lang(user_id)
-
-    if query.data == "checkin_confirm":
-        db.checkin(user_id)
-        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-        await query.edit_message_text(t(ln, "checkin_done", time=now))
-    else:
-        await query.edit_message_text(t(ln, "checkin_cancel"))
+    if not db.has_watchers(user_id):
+        await update.message.reply_text(t(ln, "setup_needed"))
+        return
+    db.checkin(user_id)
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    await update.message.reply_text(t(ln, "checkin_done", time=now))
 
 
 async def cmd_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -232,6 +215,7 @@ async def cb_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
         inviter_id = invite["user_id"]
         db.upsert_user(user_id, update.effective_user.username)  # Ensure watcher exists
         db.add_watcher(inviter_id, user_id)
+        db.suppress_stale_alert(inviter_id)
         db.delete_invite(code)
         inviter = db.get_user(inviter_id)
         await query.edit_message_text(t(ln, "invite_accepted", name=get_name(inviter)))
@@ -299,7 +283,7 @@ async def cmd_watching(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     lines = []
     buttons = []
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     for u in watching:
         name = get_name(u)
         last = u.get("last_checkin")

@@ -41,7 +41,6 @@ def main():
     app.add_handler(CommandHandler("lang", handlers.cmd_lang))
 
     # Callback query handlers
-    app.add_handler(CallbackQueryHandler(handlers.cb_checkin, pattern=r"^checkin_"))
     app.add_handler(
         CallbackQueryHandler(
             handlers.cb_settings, pattern=r"^(set_|interval_|deadline_|rhour_|rbefore_)"

@@ -1,6 +1,6 @@
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 from config import DB_PATH
 
@@ -83,7 +83,7 @@ def checkin(user_id: int):
     with get_db() as conn:
         conn.execute(
             "UPDATE users SET last_checkin = ?, alerted = 0 WHERE user_id = ?",
-            (datetime.utcnow(), user_id),
+            (datetime.now(timezone.utc), user_id),
         )
 
 
@@ -145,6 +145,22 @@ def add_watcher(user_id: int, watcher_id: int):
         conn.execute(
             "INSERT OR IGNORE INTO recipients (user_id, watcher_id) VALUES (?, ?)",
             (user_id, watcher_id),
+        )
+
+
+def suppress_stale_alert(user_id: int):
+    """If user is already past their deadline and unalerted, mark alerted so newly
+    added watchers don't receive an alert for a check-in that predates them."""
+    with get_db() as conn:
+        conn.execute(
+            """
+            UPDATE users SET alerted = 1
+            WHERE user_id = ?
+              AND last_checkin IS NOT NULL
+              AND alerted = 0
+              AND datetime(last_checkin, '+' || deadline_hours || ' hours') < datetime('now')
+            """,
+            (user_id,),
         )
 
 

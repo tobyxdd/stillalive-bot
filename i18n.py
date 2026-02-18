@@ -20,10 +20,7 @@ STRINGS = {
             "/lang - Change language\n"
             "/help - Show this help"
         ),
-        "checkin_prompt": "Confirm your check-in:",
-        "checkin_btn": "I'm alive!",
         "checkin_done": "Check-in recorded at {time}. Stay safe!",
-        "checkin_cancel": "Check-in cancelled.",
         "settings_menu": "Settings:\n\nInterval: {interval}h\nDeadline: {deadline}h\nDaily reminder: {reminder_hour}:00 UTC\nReminder before deadline: {reminder_before}h\nMessage: {message}",
         "set_interval": "Set check-in interval:",
         "set_deadline": "Set deadline (hours after last check-in):",
@@ -90,10 +87,7 @@ STRINGS = {
             "/lang - 更改语言\n"
             "/help - 显示帮助"
         ),
-        "checkin_prompt": "确认签到:",
-        "checkin_btn": "我还活着!",
         "checkin_done": "签到已记录于 {time}。保重!",
-        "checkin_cancel": "签到已取消。",
         "settings_menu": "设置:\n\n签到间隔: {interval}小时\n截止时间: {deadline}小时\n每日提醒: {reminder_hour}:00 UTC\n截止前提醒: {reminder_before}小时\n消息: {message}",
         "set_interval": "设置签到间隔:",
         "set_deadline": "设置截止时间(上次签到后小时数):",

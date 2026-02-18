@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from telegram.ext import ContextTypes
 
@@ -35,7 +35,7 @@ async def check_deadlines(context: ContextTypes.DEFAULT_TYPE):
 
 async def send_daily_reminders(context: ContextTypes.DEFAULT_TYPE):
     """Send daily reminders to users at their configured hour."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     current_hour = now.hour
     users = db.get_all_users()
     for user in users:
@@ -63,7 +63,7 @@ async def send_deadline_reminders(context: ContextTypes.DEFAULT_TYPE):
         if last:
             deadline_ts = last.timestamp() + user["deadline_hours"] * 3600
             hours_left = max(
-                0, int((deadline_ts - datetime.utcnow().timestamp()) / 3600)
+                0, int((deadline_ts - datetime.now(timezone.utc).timestamp()) / 3600)
             )
             try:
                 await context.bot.send_message(
