@@ -131,12 +131,14 @@ async def cmd_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 t(ln, "btn_before_deadline"), callback_data="set_reminder_before"
             ),
         ],
-        [InlineKeyboardButton(t(ln, "btn_edit_message"), callback_data="set_message")],
         [
+            InlineKeyboardButton(
+                t(ln, "btn_edit_message"), callback_data="set_message"
+            ),
             InlineKeyboardButton(
                 t(ln, "btn_clear_pin" if db.get_pin_hash(user_id) else "btn_set_pin"),
                 callback_data="clear_pin" if db.get_pin_hash(user_id) else "set_pin",
-            )
+            ),
         ],
     ]
     await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -194,15 +196,28 @@ async def cb_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(t(ln, "set_message"))
         context.user_data["awaiting_message"] = True
     elif data == "set_pin":
-        context.user_data["pin_purpose"] = "setup"
+        if db.get_pin_hash(user_id):
+            # PIN already exists — verify current one before allowing change
+            context.user_data["pin_purpose"] = "change_pin"
+            context.user_data["pin_digits"] = ""
+            await query.edit_message_text(
+                t(ln, "pin_confirm_change", dots=_pin_dots(0)),
+                reply_markup=_pin_keyboard(),
+            )
+        else:
+            context.user_data["pin_purpose"] = "setup"
+            context.user_data["pin_digits"] = ""
+            await query.edit_message_text(
+                t(ln, "pin_setup_enter", dots=_pin_dots(0)),
+                reply_markup=_pin_keyboard(),
+            )
+    elif data == "clear_pin":
+        context.user_data["pin_purpose"] = "clear_pin"
         context.user_data["pin_digits"] = ""
         await query.edit_message_text(
-            t(ln, "pin_setup_enter", dots=_pin_dots(0)),
+            t(ln, "pin_confirm_clear", dots=_pin_dots(0)),
             reply_markup=_pin_keyboard(),
         )
-    elif data == "clear_pin":
-        db.clear_pin(user_id)
-        await query.edit_message_text(t(ln, "pin_cleared"))
     elif data.startswith("interval_"):
         val = int(data.split("_")[1])
         db.upsert_user(user_id, interval_hours=val)
@@ -258,7 +273,11 @@ async def cb_pin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["pin_digits"] = digits
 
     if len(digits) < 4:
-        prompt_key = "pin_setup_enter" if purpose == "setup" else "pin_enter"
+        prompt_key = {
+            "setup": "pin_setup_enter",
+            "clear_pin": "pin_confirm_clear",
+            "change_pin": "pin_confirm_change",
+        }.get(purpose, "pin_enter")
         await query.edit_message_text(
             t(ln, prompt_key, dots=_pin_dots(len(digits))),
             reply_markup=_pin_keyboard(),
@@ -278,6 +297,33 @@ async def cb_pin(update: Update, context: ContextTypes.DEFAULT_TYPE):
             context.user_data.pop("pin_digits", None)
             now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             await query.edit_message_text(t(ln, "checkin_done", time=now))
+        else:
+            context.user_data["pin_digits"] = ""
+            await query.edit_message_text(
+                t(ln, "pin_wrong", dots=_pin_dots(0)),
+                reply_markup=_pin_keyboard(),
+            )
+    elif purpose == "clear_pin":
+        if db.verify_pin(user_id, digits):
+            db.clear_pin(user_id)
+            context.user_data.pop("pin_purpose", None)
+            context.user_data.pop("pin_digits", None)
+            await query.edit_message_text(t(ln, "pin_cleared"))
+        else:
+            context.user_data["pin_digits"] = ""
+            await query.edit_message_text(
+                t(ln, "pin_wrong", dots=_pin_dots(0)),
+                reply_markup=_pin_keyboard(),
+            )
+    elif purpose == "change_pin":
+        if db.verify_pin(user_id, digits):
+            # Old PIN verified — now collect the new one
+            context.user_data["pin_purpose"] = "setup"
+            context.user_data["pin_digits"] = ""
+            await query.edit_message_text(
+                t(ln, "pin_setup_enter", dots=_pin_dots(0)),
+                reply_markup=_pin_keyboard(),
+            )
         else:
             context.user_data["pin_digits"] = ""
             await query.edit_message_text(
