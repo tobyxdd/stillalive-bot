@@ -45,7 +45,7 @@ def main():
     app.add_handler(
         CallbackQueryHandler(
             handlers.cb_settings,
-            pattern=r"^(set_|clear_pin|interval_|deadline_|rhour_|rbefore_)",
+            pattern=r"^(set_|clear_pin|enable_duress|disable_duress|interval_|deadline_|rhour_|rbefore_)",
         )
     )
     app.add_handler(

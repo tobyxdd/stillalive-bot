@@ -39,6 +39,8 @@ MIGRATIONS = [
     """,
     # v1 → v2: add PIN protection
     "ALTER TABLE users ADD COLUMN pin_hash TEXT;",
+    # v2 → v3: add duress mode
+    "ALTER TABLE users ADD COLUMN duress_mode INTEGER DEFAULT 0;",
 ]
 
 
@@ -250,4 +252,23 @@ def verify_pin(user_id: int, pin: str) -> bool:
 
 def clear_pin(user_id: int):
     with get_db() as conn:
-        conn.execute("UPDATE users SET pin_hash = NULL WHERE user_id = ?", (user_id,))
+        conn.execute(
+            "UPDATE users SET pin_hash = NULL, duress_mode = 0 WHERE user_id = ?",
+            (user_id,),
+        )
+
+
+def get_duress_mode(user_id: int) -> bool:
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT duress_mode FROM users WHERE user_id = ?", (user_id,)
+        ).fetchone()
+        return bool(row["duress_mode"]) if row else False
+
+
+def set_duress_mode(user_id: int, enabled: bool):
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE users SET duress_mode = ? WHERE user_id = ?",
+            (1 if enabled else 0, user_id),
+        )

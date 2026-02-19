@@ -74,6 +74,12 @@ STRINGS = {
         "pin_confirm_change": "Enter your current PIN to set a new one:\n\n{dots}",
         "btn_set_pin": "Set PIN",
         "btn_clear_pin": "Clear PIN",
+        "btn_enable_duress": "Enable Duress Mode",
+        "btn_disable_duress": "Disable Duress Mode",
+        "duress_enabled": "Duress mode enabled. The bot will now always appear to accept any PIN.",
+        "duress_disabled": "Duress mode disabled.",
+        "pin_confirm_duress_enable": "Enter your PIN to enable duress mode:\n\n{dots}",
+        "pin_confirm_duress_disable": "Enter your PIN to disable duress mode:\n\n{dots}",
     },
     "zh": {
         "welcome": (
@@ -150,6 +156,12 @@ STRINGS = {
         "pin_confirm_change": "请输入当前 PIN 码以设置新码:\n\n{dots}",
         "btn_set_pin": "设置 PIN 码",
         "btn_clear_pin": "清除 PIN 码",
+        "btn_enable_duress": "启用胁迫模式",
+        "btn_disable_duress": "禁用胁迫模式",
+        "duress_enabled": "胁迫模式已启用。无论输入什么 PIN 码,机器人都会显示签到成功。",
+        "duress_disabled": "胁迫模式已禁用。",
+        "pin_confirm_duress_enable": "请输入 PIN 码以启用胁迫模式:\n\n{dots}",
+        "pin_confirm_duress_disable": "请输入 PIN 码以禁用胁迫模式:\n\n{dots}",
     },
     "es": {
         "welcome": (
@@ -226,6 +238,12 @@ STRINGS = {
         "pin_confirm_change": "Introduce tu PIN actual para establecer uno nuevo:\n\n{dots}",
         "btn_set_pin": "Establecer PIN",
         "btn_clear_pin": "Eliminar PIN",
+        "btn_enable_duress": "Activar modo coacción",
+        "btn_disable_duress": "Desactivar modo coacción",
+        "duress_enabled": "Modo coacción activado. El bot siempre mostrará éxito independientemente del PIN introducido.",
+        "duress_disabled": "Modo coacción desactivado.",
+        "pin_confirm_duress_enable": "Introduce tu PIN para activar el modo coacción:\n\n{dots}",
+        "pin_confirm_duress_disable": "Introduce tu PIN para desactivar el modo coacción:\n\n{dots}",
     },
     "ru": {
         "welcome": (
@@ -302,6 +320,12 @@ STRINGS = {
         "pin_confirm_change": "Введите текущий PIN для установки нового:\n\n{dots}",
         "btn_set_pin": "Установить PIN",
         "btn_clear_pin": "Удалить PIN",
+        "btn_enable_duress": "Включить режим принуждения",
+        "btn_disable_duress": "Выключить режим принуждения",
+        "duress_enabled": "Режим принуждения включён. Бот будет принимать любой PIN как верный.",
+        "duress_disabled": "Режим принуждения выключён.",
+        "pin_confirm_duress_enable": "Введите PIN для включения режима принуждения:\n\n{dots}",
+        "pin_confirm_duress_disable": "Введите PIN для выключения режима принуждения:\n\n{dots}",
     },
 }
 
