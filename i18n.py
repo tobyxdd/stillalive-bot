@@ -151,6 +151,166 @@ STRINGS = {
         "btn_set_pin": "设置 PIN 码",
         "btn_clear_pin": "清除 PIN 码",
     },
+    "es": {
+        "welcome": (
+            "¡Bienvenido a Still Alive Bot!\n\n"
+            "Este bot te ayuda a registrarte diariamente. Si no lo haces antes del límite, tus vigilantes serán notificados.\n\n"
+            "Configuración rápida:\n"
+            "1. /settings → Editar mensaje (lo que verán tus vigilantes si no respondes)\n"
+            "2. /invite → Comparte el enlace con alguien de confianza\n"
+            "3. /checkin → ¡Hazlo cada día!\n\n"
+            "Por defecto: registro cada 24h, alerta tras 48h.\n"
+            "Usa /settings para personalizar."
+        ),
+        "help": (
+            "Comandos:\n"
+            "/checkin - Registrarse para confirmar que estás bien\n"
+            "/settings - Configurar ajustes\n"
+            "/invite - Generar enlace de invitación para un vigilante\n"
+            "/watchers - Ver tus vigilantes\n"
+            "/watching - Ver a quién estás vigilando\n"
+            "/lang - Cambiar idioma\n"
+            "/help - Mostrar esta ayuda"
+        ),
+        "checkin_done": "Registro realizado a las {time}. ¡Cuídate!",
+        "settings_menu": "Ajustes:\n\nIntervalo: {interval}h\nLímite: {deadline}h\nRecordatorio diario: {reminder_hour}:00 UTC\nAviso antes del límite: {reminder_before}h\nMensaje: {message}",
+        "set_interval": "Establecer intervalo de registro:",
+        "set_deadline": "Establecer límite (horas tras el último registro):",
+        "set_reminder_hour": "Establecer hora del recordatorio diario (UTC):",
+        "set_reminder_before": "Avisarme X horas antes del límite:",
+        "set_message": "Envía tu mensaje de alerta (lo que verán tus vigilantes):",
+        "message_saved": "¡Mensaje de alerta guardado!",
+        "setting_saved": "¡Ajuste guardado!",
+        "invite_link": "Comparte este enlace con quien quieras como vigilante:\n\n{link}\n\nDeben hacer clic y aceptar para recibir alertas.",
+        "invite_received": "{name} quiere que seas su contacto de emergencia.\n\nSi no se registra antes del límite, serás notificado.\n\n¿Aceptas?",
+        "invite_accept": "Aceptar",
+        "invite_decline": "Rechazar",
+        "invite_accepted": "Ahora estás vigilando a {name}.",
+        "invite_accepted_notify": "¡{name} aceptó tu invitación y ahora te está vigilando!",
+        "invite_declined": "Invitación rechazada.",
+        "invite_invalid": "Esta invitación no es válida o ha expirado.",
+        "watchers_list": "Tus vigilantes:\n{list}\n\nUsa los botones para eliminar.",
+        "watchers_empty": "Aún no tienes vigilantes. Usa /invite para añadir.",
+        "watcher_removed": "Se eliminó a {name} de tus vigilantes.",
+        "watching_list": "Estás vigilando a:\n{list}",
+        "watching_empty": "No estás vigilando a nadie.",
+        "watching_status_ok": "{name}: último registro {time} (OK)",
+        "watching_status_late": "{name}: último registro {time} (¡TARDE!)",
+        "watching_status_never": "{name}: nunca se ha registrado",
+        "reminder_daily": "Recordatorio diario: Por favor regístrate con /checkin",
+        "reminder_deadline": "Aviso: ¡Tu límite es en {hours}h! Regístrate pronto con /checkin",
+        "alert_message": "ALERTA de Still Alive Bot:\n\n¡{name} no se ha registrado antes del límite!\n\nSu mensaje:\n{message}",
+        "alert_no_message": "ALERTA de Still Alive Bot:\n\n¡{name} no se ha registrado antes del límite!\n\n(Sin mensaje personalizado)",
+        "lang_changed": "Idioma cambiado a español.",
+        "lang_select": "Selecciona idioma:",
+        "setup_needed": "Configura primero:\n1. Usa /settings para establecer tu mensaje de alerta\n2. Usa /invite para añadir vigilantes",
+        "back": "Atrás",
+        "cancel": "Cancelar",
+        "hours": "{n}h",
+        "btn_interval": "Intervalo",
+        "btn_deadline": "Límite",
+        "btn_reminder_time": "Hora de aviso",
+        "btn_before_deadline": "Antes del límite",
+        "btn_edit_message": "Editar mensaje",
+        "btn_remove": "Eliminar {name}",
+        "btn_stop_watching": "Dejar de vigilar a {name}",
+        "stopped_watching": "Dejaste de vigilar a {name}.",
+        "watcher_left": "{name} ya no te está vigilando.",
+        "not_set": "(no establecido)",
+        "pin_enter": "Introduce tu PIN para registrarte:\n\n{dots}",
+        "pin_setup_enter": "Establece un nuevo PIN de 4 dígitos:\n\n{dots}",
+        "pin_wrong": "PIN incorrecto. Inténtalo de nuevo:\n\n{dots}",
+        "pin_set": "Protección por PIN activada.",
+        "pin_cleared": "Protección por PIN eliminada.",
+        "pin_confirm_clear": "Introduce tu PIN actual para desactivar la protección:\n\n{dots}",
+        "pin_confirm_change": "Introduce tu PIN actual para establecer uno nuevo:\n\n{dots}",
+        "btn_set_pin": "Establecer PIN",
+        "btn_clear_pin": "Eliminar PIN",
+    },
+    "ru": {
+        "welcome": (
+            "Добро пожаловать в Still Alive Bot!\n\n"
+            "Этот бот помогает вам регулярно отмечаться. Если вы пропустите дедлайн, ваши наблюдатели получат уведомление.\n\n"
+            "Быстрая настройка:\n"
+            "1. /settings → Редактировать сообщение (что увидят наблюдатели, если вы не отвечаете)\n"
+            "2. /invite → Поделитесь ссылкой с доверенным человеком\n"
+            "3. /checkin → Делайте это каждый день!\n\n"
+            "По умолчанию: отметка каждые 24ч, оповещение через 48ч.\n"
+            "Используйте /settings для настройки."
+        ),
+        "help": (
+            "Команды:\n"
+            "/checkin - Отметиться и подтвердить, что вы живы\n"
+            "/settings - Настройки\n"
+            "/invite - Создать ссылку-приглашение для наблюдателя\n"
+            "/watchers - Посмотреть ваших наблюдателей\n"
+            "/watching - Посмотреть, за кем вы наблюдаете\n"
+            "/lang - Изменить язык\n"
+            "/help - Показать эту справку"
+        ),
+        "checkin_done": "Отметка записана в {time}. Берегите себя!",
+        "settings_menu": "Настройки:\n\nИнтервал: {interval}ч\nДедлайн: {deadline}ч\nЕжедневное напоминание: {reminder_hour}:00 UTC\nНапоминание до дедлайна: {reminder_before}ч\nСообщение: {message}",
+        "set_interval": "Установить интервал отметки:",
+        "set_deadline": "Установить дедлайн (часов после последней отметки):",
+        "set_reminder_hour": "Установить время ежедневного напоминания (UTC):",
+        "set_reminder_before": "Напомнить за X часов до дедлайна:",
+        "set_message": "Отправьте ваше сообщение (его увидят наблюдатели):",
+        "message_saved": "Сообщение сохранено!",
+        "setting_saved": "Настройка сохранена!",
+        "invite_link": "Поделитесь этой ссылкой с тем, кого хотите сделать наблюдателем:\n\n{link}\n\nОни должны нажать и принять, чтобы получать оповещения.",
+        "invite_received": "{name} хочет сделать вас своим экстренным контактом.\n\nЕсли они пропустят дедлайн, вы получите уведомление.\n\nПринять?",
+        "invite_accept": "Принять",
+        "invite_decline": "Отклонить",
+        "invite_accepted": "Теперь вы наблюдаете за {name}.",
+        "invite_accepted_notify": "{name} принял(а) ваше приглашение и теперь наблюдает за вами!",
+        "invite_declined": "Приглашение отклонено.",
+        "invite_invalid": "Это приглашение недействительно или истекло.",
+        "watchers_list": "Ваши наблюдатели:\n{list}\n\nИспользуйте кнопки для удаления.",
+        "watchers_empty": "У вас ещё нет наблюдателей. Используйте /invite для добавления.",
+        "watcher_removed": "{name} удалён из ваших наблюдателей.",
+        "watching_list": "Вы наблюдаете за:\n{list}",
+        "watching_empty": "Вы ни за кем не наблюдаете.",
+        "watching_status_ok": "{name}: последняя отметка {time} (OK)",
+        "watching_status_late": "{name}: последняя отметка {time} (ОПОЗДАНИЕ!)",
+        "watching_status_never": "{name}: никогда не отмечался(-ась)",
+        "reminder_daily": "Ежедневное напоминание: пожалуйста, отметьтесь с помощью /checkin",
+        "reminder_deadline": "Внимание: до дедлайна осталось {hours}ч! Отметьтесь скорее с помощью /checkin",
+        "alert_message": "ОПОВЕЩЕНИЕ от Still Alive Bot:\n\n{name} пропустил(а) дедлайн!\n\nИх сообщение:\n{message}",
+        "alert_no_message": "ОПОВЕЩЕНИЕ от Still Alive Bot:\n\n{name} пропустил(а) дедлайн!\n\n(Сообщение не задано)",
+        "lang_changed": "Язык изменён на русский.",
+        "lang_select": "Выберите язык:",
+        "setup_needed": "Сначала выполните настройку:\n1. Используйте /settings для задания сообщения\n2. Используйте /invite для добавления наблюдателей",
+        "back": "Назад",
+        "cancel": "Отмена",
+        "hours": "{n}ч",
+        "btn_interval": "Интервал",
+        "btn_deadline": "Дедлайн",
+        "btn_reminder_time": "Время напоминания",
+        "btn_before_deadline": "До дедлайна",
+        "btn_edit_message": "Изменить сообщение",
+        "btn_remove": "Удалить {name}",
+        "btn_stop_watching": "Перестать следить за {name}",
+        "stopped_watching": "Вы перестали наблюдать за {name}.",
+        "watcher_left": "{name} больше не наблюдает за вами.",
+        "not_set": "(не задано)",
+        "pin_enter": "Введите PIN для отметки:\n\n{dots}",
+        "pin_setup_enter": "Задайте новый 4-значный PIN:\n\n{dots}",
+        "pin_wrong": "Неверный PIN. Попробуйте ещё раз:\n\n{dots}",
+        "pin_set": "Защита PIN включена.",
+        "pin_cleared": "Защита PIN отключена.",
+        "pin_confirm_clear": "Введите текущий PIN для отключения защиты:\n\n{dots}",
+        "pin_confirm_change": "Введите текущий PIN для установки нового:\n\n{dots}",
+        "btn_set_pin": "Установить PIN",
+        "btn_clear_pin": "Удалить PIN",
+    },
+}
+
+
+LANGUAGE_NAMES = {
+    "en": "English",
+    "zh": "中文",
+    "es": "Español",
+    "ru": "Русский",
 }
 
 

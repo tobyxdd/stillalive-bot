@@ -5,7 +5,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 import db
-from i18n import t
+from i18n import LANGUAGE_NAMES, t
 
 # Conversation states
 SET_MESSAGE = 1
@@ -479,11 +479,13 @@ async def cb_stop_watching(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_lang(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     ln = lang(user_id)
+    langs = list(LANGUAGE_NAMES.items())
     keyboard = [
         [
-            InlineKeyboardButton("English", callback_data="lang_en"),
-            InlineKeyboardButton("中文", callback_data="lang_zh"),
+            InlineKeyboardButton(name, callback_data=f"lang_{code}")
+            for code, name in langs[i : i + 2]
         ]
+        for i in range(0, len(langs), 2)
     ]
     await update.message.reply_text(
         t(ln, "lang_select"), reply_markup=InlineKeyboardMarkup(keyboard)
