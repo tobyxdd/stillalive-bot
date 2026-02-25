@@ -41,6 +41,20 @@ MIGRATIONS = [
     "ALTER TABLE users ADD COLUMN pin_hash TEXT;",
     # v2 → v3: add duress mode
     "ALTER TABLE users ADD COLUMN duress_mode INTEGER DEFAULT 0;",
+    # v3 → v4: add check-in logs
+    """
+    CREATE TABLE IF NOT EXISTS checkin_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        success INTEGER NOT NULL DEFAULT 0,
+        method TEXT NOT NULL,
+        failure_reason TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+    );
+    CREATE INDEX idx_checkin_logs_user ON checkin_logs(user_id);
+    CREATE INDEX idx_checkin_logs_ts ON checkin_logs(timestamp);
+    """,
 ]
 
 
@@ -95,6 +109,22 @@ def checkin(user_id: int):
         conn.execute(
             "UPDATE users SET last_checkin = ?, alerted = 0 WHERE user_id = ?",
             (datetime.now(timezone.utc), user_id),
+        )
+
+
+def log_checkin(
+    user_id: int, success: bool, method: str, failure_reason: str | None = None
+):
+    with get_db() as conn:
+        conn.execute(
+            "INSERT INTO checkin_logs (user_id, timestamp, success, method, failure_reason) VALUES (?, ?, ?, ?, ?)",
+            (
+                user_id,
+                datetime.now(timezone.utc),
+                1 if success else 0,
+                method,
+                failure_reason,
+            ),
         )
 
 

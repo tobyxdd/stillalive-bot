@@ -84,6 +84,7 @@ async def cmd_checkin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     ln = lang(user_id)
     if not db.has_watchers(user_id):
+        db.log_checkin(user_id, False, "direct", "no_watchers")
         await update.message.reply_text(t(ln, "setup_needed"))
         return
     if db.get_pin_hash(user_id):
@@ -95,6 +96,7 @@ async def cmd_checkin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
     db.checkin(user_id)
+    db.log_checkin(user_id, True, "direct")
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     await update.message.reply_text(t(ln, "checkin_done", time=now))
 
@@ -280,6 +282,8 @@ async def cb_pin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     action = query.data  # e.g. "pin_3", "pin_back", "pin_cancel"
 
     if action == "pin_cancel":
+        if context.user_data.get("pin_purpose") == "checkin":
+            db.log_checkin(user_id, False, "pin", "cancelled")
         context.user_data.pop("pin_purpose", None)
         context.user_data.pop("pin_digits", None)
         await query.delete_message()
@@ -321,12 +325,16 @@ async def cb_pin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         correct = db.verify_pin(user_id, digits)
         if correct:
             db.checkin(user_id)
+            db.log_checkin(user_id, True, "pin")
         if correct or db.get_duress_mode(user_id):
+            if not correct:
+                db.log_checkin(user_id, False, "pin", "duress")
             context.user_data.pop("pin_purpose", None)
             context.user_data.pop("pin_digits", None)
             now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
             await query.edit_message_text(t(ln, "checkin_done", time=now))
         else:
+            db.log_checkin(user_id, False, "pin", "wrong_pin")
             context.user_data["pin_digits"] = ""
             await query.edit_message_text(
                 t(ln, "pin_wrong", dots=_pin_dots(0)),
