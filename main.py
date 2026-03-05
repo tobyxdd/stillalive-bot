@@ -1,5 +1,6 @@
 import logging
 
+from telegram import BotCommand
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -12,6 +13,19 @@ import db
 import handlers
 import jobs
 from config import BOT_TOKEN
+from i18n import LANGUAGE_NAMES, t
+
+BOT_COMMANDS = ["checkin", "settings", "invite", "watchers", "watching", "lang", "help"]
+
+
+async def post_init(application: Application) -> None:
+    bot = application.bot
+    for lang_code in LANGUAGE_NAMES:
+        bot_commands = [
+            BotCommand(cmd, t(lang_code, f"cmd_{cmd}")) for cmd in BOT_COMMANDS
+        ]
+        await bot.set_my_commands(bot_commands, language_code=lang_code)
+
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -28,7 +42,7 @@ def main():
 
     db.init_db()
 
-    app = Application.builder().token(BOT_TOKEN).build()
+    app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 
     # Command handlers
     app.add_handler(CommandHandler("start", handlers.cmd_start))

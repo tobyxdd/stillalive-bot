@@ -80,6 +80,13 @@ STRINGS = {
         "duress_disabled": "Duress mode disabled.",
         "pin_confirm_duress_enable": "Enter your PIN to enable duress mode:\n\n{dots}",
         "pin_confirm_duress_disable": "Enter your PIN to disable duress mode:\n\n{dots}",
+        "cmd_checkin": "Check in to confirm you're alive",
+        "cmd_settings": "Configure your settings",
+        "cmd_invite": "Generate invite link for a watcher",
+        "cmd_watchers": "View your watchers",
+        "cmd_watching": "View who you're watching",
+        "cmd_lang": "Change language",
+        "cmd_help": "Show help",
     },
     "zh": {
         "welcome": (
@@ -162,6 +169,13 @@ STRINGS = {
         "duress_disabled": "胁迫模式已禁用。",
         "pin_confirm_duress_enable": "请输入 PIN 码以启用胁迫模式:\n\n{dots}",
         "pin_confirm_duress_disable": "请输入 PIN 码以禁用胁迫模式:\n\n{dots}",
+        "cmd_checkin": "签到确认你还活着",
+        "cmd_settings": "配置设置",
+        "cmd_invite": "生成守望者邀请链接",
+        "cmd_watchers": "查看你的守望者",
+        "cmd_watching": "查看你正在守望的人",
+        "cmd_lang": "更改语言",
+        "cmd_help": "显示帮助",
     },
     "es": {
         "welcome": (
@@ -244,6 +258,13 @@ STRINGS = {
         "duress_disabled": "Modo coacción desactivado.",
         "pin_confirm_duress_enable": "Introduce tu PIN para activar el modo coacción:\n\n{dots}",
         "pin_confirm_duress_disable": "Introduce tu PIN para desactivar el modo coacción:\n\n{dots}",
+        "cmd_checkin": "Registrarse para confirmar que estás bien",
+        "cmd_settings": "Configurar ajustes",
+        "cmd_invite": "Generar enlace de invitación para un vigilante",
+        "cmd_watchers": "Ver tus vigilantes",
+        "cmd_watching": "Ver a quién estás vigilando",
+        "cmd_lang": "Cambiar idioma",
+        "cmd_help": "Mostrar ayuda",
     },
     "ru": {
         "welcome": (
@@ -326,6 +347,13 @@ STRINGS = {
         "duress_disabled": "Режим принуждения выключён.",
         "pin_confirm_duress_enable": "Введите PIN для включения режима принуждения:\n\n{dots}",
         "pin_confirm_duress_disable": "Введите PIN для выключения режима принуждения:\n\n{dots}",
+        "cmd_checkin": "Отметиться и подтвердить, что вы живы",
+        "cmd_settings": "Настройки",
+        "cmd_invite": "Создать ссылку-приглашение для наблюдателя",
+        "cmd_watchers": "Посмотреть ваших наблюдателей",
+        "cmd_watching": "Посмотреть, за кем вы наблюдаете",
+        "cmd_lang": "Изменить язык",
+        "cmd_help": "Показать справку",
     },
 }
 
