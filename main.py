@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 
 from telegram import BotCommand
 from telegram.ext import (
@@ -81,9 +82,11 @@ def main():
 
     # Schedule jobs
     job_queue = app.job_queue
-    job_queue.run_repeating(jobs.check_deadlines, interval=3600, first=10)
-    job_queue.run_repeating(jobs.send_daily_reminders, interval=3600, first=10)
-    job_queue.run_repeating(jobs.send_deadline_reminders, interval=3600, first=10)
+    now = datetime.now(timezone.utc)
+    snh = 3600 - (now.minute * 60 + now.second)
+    job_queue.run_repeating(jobs.check_deadlines, interval=3600, first=snh)
+    job_queue.run_repeating(jobs.send_daily_reminders, interval=3600, first=snh)
+    job_queue.run_repeating(jobs.send_deadline_reminders, interval=3600, first=snh)
 
     logger.info("Bot starting...")
     app.run_polling()
