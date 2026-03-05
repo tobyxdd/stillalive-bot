@@ -302,3 +302,68 @@ def set_duress_mode(user_id: int, enabled: bool):
             "UPDATE users SET duress_mode = ? WHERE user_id = ?",
             (1 if enabled else 0, user_id),
         )
+
+
+# Admin query functions
+def get_stats() -> dict:
+    with get_db() as conn:
+        total_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        users_with_watchers = conn.execute(
+            "SELECT COUNT(DISTINCT user_id) FROM recipients"
+        ).fetchone()[0]
+        total_watchers = conn.execute("SELECT COUNT(*) FROM recipients").fetchone()[0]
+        past_deadline = conn.execute("""
+            SELECT COUNT(*) FROM users
+            WHERE last_checkin IS NOT NULL AND alerted = 0
+              AND datetime(last_checkin, '+' || deadline_hours || ' hours') < datetime('now')
+        """).fetchone()[0]
+        alerted = conn.execute(
+            "SELECT COUNT(*) FROM users WHERE alerted = 1"
+        ).fetchone()[0]
+        pending_invites = conn.execute("SELECT COUNT(*) FROM invites").fetchone()[0]
+        return {
+            "total_users": total_users,
+            "users_with_watchers": users_with_watchers,
+            "total_watchers": total_watchers,
+            "past_deadline": past_deadline,
+            "alerted": alerted,
+            "pending_invites": pending_invites,
+        }
+
+
+def get_checkin_stats(hours: int = 24) -> dict:
+    with get_db() as conn:
+        cutoff = f"-{hours} hours"
+        total = conn.execute(
+            "SELECT COUNT(*) FROM checkin_logs WHERE timestamp > datetime('now', ?)",
+            (cutoff,),
+        ).fetchone()[0]
+        successful = conn.execute(
+            "SELECT COUNT(*) FROM checkin_logs WHERE success = 1 AND timestamp > datetime('now', ?)",
+            (cutoff,),
+        ).fetchone()[0]
+        failed = total - successful
+        wrong_pin = conn.execute(
+            "SELECT COUNT(*) FROM checkin_logs WHERE failure_reason = 'wrong_pin' AND timestamp > datetime('now', ?)",
+            (cutoff,),
+        ).fetchone()[0]
+        duress = conn.execute(
+            "SELECT COUNT(*) FROM checkin_logs WHERE failure_reason = 'duress' AND timestamp > datetime('now', ?)",
+            (cutoff,),
+        ).fetchone()[0]
+        return {
+            "total": total,
+            "successful": successful,
+            "failed": failed,
+            "wrong_pin": wrong_pin,
+            "duress": duress,
+        }
+
+
+def get_user_checkin_logs(user_id: int, limit: int = 10) -> list[dict]:
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT * FROM checkin_logs WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]

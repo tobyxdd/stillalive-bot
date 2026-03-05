@@ -53,6 +53,7 @@ def main():
     app.add_handler(CommandHandler("watchers", handlers.cmd_watchers))
     app.add_handler(CommandHandler("watching", handlers.cmd_watching))
     app.add_handler(CommandHandler("lang", handlers.cmd_lang))
+    app.add_handler(CommandHandler("admin", handlers.cmd_admin))
 
     # Callback query handlers
     app.add_handler(CallbackQueryHandler(handlers.cb_pin, pattern=r"^pin_"))

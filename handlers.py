@@ -1,3 +1,4 @@
+import os
 import secrets
 from datetime import datetime, timezone
 
@@ -5,6 +6,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 
 import db
+from config import ADMIN_ID, DB_PATH
 from i18n import LANGUAGE_NAMES, t
 
 # Conversation states
@@ -551,3 +553,126 @@ async def cb_lang(update: Update, context: ContextTypes.DEFAULT_TYPE):
     new_lang = query.data.split("_")[1]
     db.upsert_user(user_id, language=new_lang)
     await query.edit_message_text(t(new_lang, "lang_changed"))
+
+
+async def cmd_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not ADMIN_ID or update.effective_user.id != ADMIN_ID:
+        return
+
+    args = context.args or []
+    subcommand = args[0].lower() if args else "status"
+
+    if subcommand == "status":
+        await _admin_status(update)
+    elif subcommand == "user" and len(args) >= 2:
+        await _admin_user(update, args[1])
+    elif subcommand == "broadcast" and len(args) >= 2:
+        message = " ".join(args[1:])
+        await _admin_broadcast(update, context, message)
+    else:
+        await update.message.reply_text(
+            "Admin commands:\n"
+            "/admin — Bot status dashboard\n"
+            "/admin user <id> — Inspect a user\n"
+            "/admin broadcast <msg> — Message all users"
+        )
+
+
+async def _admin_status(update: Update):
+    stats = db.get_stats()
+    checkins = db.get_checkin_stats(24)
+
+    db_size_kb = os.path.getsize(DB_PATH) / 1024
+
+    lines = [
+        "Bot Status",
+        "",
+        f"Users: {stats['total_users']}",
+        f"  With watchers: {stats['users_with_watchers']}",
+        f"  Without watchers: {stats['total_users'] - stats['users_with_watchers']}",
+        f"Watcher links: {stats['total_watchers']}",
+        f"Pending invites: {stats['pending_invites']}",
+        "",
+        f"Past deadline: {stats['past_deadline']}",
+        f"Alerted: {stats['alerted']}",
+        "",
+        "Check-ins (24h):",
+        f"  Total: {checkins['total']}",
+        f"  Successful: {checkins['successful']}",
+        f"  Failed: {checkins['failed']}",
+        f"  Wrong PIN: {checkins['wrong_pin']}",
+        f"  Duress: {checkins['duress']}",
+        "",
+        f"DB size: {db_size_kb:.1f} KB",
+    ]
+    await update.message.reply_text("\n".join(lines))
+
+
+async def _admin_user(update: Update, user_id_str: str):
+    try:
+        uid = int(user_id_str)
+    except ValueError:
+        await update.message.reply_text("Invalid user ID.")
+        return
+
+    user = db.get_user(uid)
+    if not user:
+        await update.message.reply_text(f"User {uid} not found.")
+        return
+
+    watchers = db.get_watchers(uid)
+    watcher_names = []
+    for wid in watchers:
+        w = db.get_user(wid)
+        watcher_names.append(get_name(w, f"User {wid}"))
+
+    last = user.get("last_checkin") or "never"
+    has_pin = "yes" if user.get("pin_hash") else "no"
+    duress = "yes" if user.get("duress_mode") else "no"
+
+    lines = [
+        f"User: {get_name(user)} ({uid})",
+        f"Language: {user.get('language', 'en')}",
+        f"Created: {user.get('created_at', '?')}",
+        "",
+        f"Interval: {user['interval_hours']}h",
+        f"Deadline: {user['deadline_hours']}h",
+        f"Reminder: {user['reminder_hour']}:00 UTC",
+        f"Reminder before: {user['reminder_before']}h",
+        "",
+        f"Last check-in: {last}",
+        f"Alerted: {'yes' if user.get('alerted') else 'no'}",
+        f"PIN: {has_pin}",
+        f"Duress mode: {duress}",
+        "",
+        f"Watchers ({len(watchers)}): {', '.join(watcher_names) or 'none'}",
+    ]
+
+    logs = db.get_user_checkin_logs(uid)
+    if logs:
+        lines.append("")
+        lines.append("Recent check-ins:")
+        for log in logs:
+            status = "OK" if log["success"] else log.get("failure_reason", "failed")
+            lines.append(f"  {log['timestamp']} [{log['method']}] {status}")
+    else:
+        lines.append("\nNo check-in logs.")
+
+    await update.message.reply_text("\n".join(lines))
+
+
+async def _admin_broadcast(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, message: str
+):
+    users = db.get_all_users()
+    sent = 0
+    failed = 0
+    for user in users:
+        try:
+            await context.bot.send_message(user["user_id"], message)
+            sent += 1
+        except Exception:
+            failed += 1
+    await update.message.reply_text(
+        f"Broadcast complete: {sent} sent, {failed} failed."
+    )
