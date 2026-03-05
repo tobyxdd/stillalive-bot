@@ -1,6 +1,7 @@
 import os
 import secrets
 from datetime import datetime, timezone
+from html import escape as html_escape
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
@@ -111,7 +112,7 @@ async def cmd_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db.upsert_user(user_id)
         user = db.get_user(user_id)
 
-    msg = user.get("message") or t(ln, "not_set")
+    msg = html_escape(user.get("message") or t(ln, "not_set"))
     text = t(
         ln,
         "settings_menu",
@@ -156,7 +157,9 @@ async def cmd_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             ]
         )
-    await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text(
+        text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="HTML"
+    )
 
 
 async def cb_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):

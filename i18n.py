@@ -21,7 +21,7 @@ STRINGS = {
             "/help - Show this help"
         ),
         "checkin_done": "Check-in recorded at {time}. Stay safe!",
-        "settings_menu": "Settings:\n\nInterval: {interval}h\nDeadline: {deadline}h\nDaily reminder: {reminder_hour}:00 UTC\nReminder before deadline: {reminder_before}h\nMessage: {message}",
+        "settings_menu": "Settings:\n\nInterval: {interval}h\nDeadline: {deadline}h\nDaily reminder: {reminder_hour}:00 UTC\nReminder before deadline: {reminder_before}h\n\nMessage:\n<blockquote>{message}</blockquote>",
         "set_interval": "Set check-in interval:",
         "set_deadline": "Set deadline (hours after last check-in):",
         "set_reminder_hour": "Set daily reminder time (UTC hour):",
@@ -110,7 +110,7 @@ STRINGS = {
             "/help - 显示帮助"
         ),
         "checkin_done": "签到已记录于 {time}。保重!",
-        "settings_menu": "设置:\n\n签到间隔: {interval}小时\n截止时间: {deadline}小时\n每日提醒: {reminder_hour}:00 UTC\n截止前提醒: {reminder_before}小时\n消息: {message}",
+        "settings_menu": "设置:\n\n签到间隔: {interval}小时\n截止时间: {deadline}小时\n每日提醒: {reminder_hour}:00 UTC\n截止前提醒: {reminder_before}小时\n\n消息:\n<blockquote>{message}</blockquote>",
         "set_interval": "设置签到间隔:",
         "set_deadline": "设置截止时间(上次签到后小时数):",
         "set_reminder_hour": "设置每日提醒时间(UTC小时):",
@@ -199,7 +199,7 @@ STRINGS = {
             "/help - Mostrar esta ayuda"
         ),
         "checkin_done": "Registro realizado a las {time}. ¡Cuídate!",
-        "settings_menu": "Ajustes:\n\nIntervalo: {interval}h\nLímite: {deadline}h\nRecordatorio diario: {reminder_hour}:00 UTC\nAviso antes del límite: {reminder_before}h\nMensaje: {message}",
+        "settings_menu": "Ajustes:\n\nIntervalo: {interval}h\nLímite: {deadline}h\nRecordatorio diario: {reminder_hour}:00 UTC\nAviso antes del límite: {reminder_before}h\n\nMensaje:\n<blockquote>{message}</blockquote>",
         "set_interval": "Establecer intervalo de registro:",
         "set_deadline": "Establecer límite (horas tras el último registro):",
         "set_reminder_hour": "Establecer hora del recordatorio diario (UTC):",
@@ -288,7 +288,7 @@ STRINGS = {
             "/help - Показать эту справку"
         ),
         "checkin_done": "Отметка записана в {time}. Берегите себя!",
-        "settings_menu": "Настройки:\n\nИнтервал: {interval}ч\nДедлайн: {deadline}ч\nЕжедневное напоминание: {reminder_hour}:00 UTC\nНапоминание до дедлайна: {reminder_before}ч\nСообщение: {message}",
+        "settings_menu": "Настройки:\n\nИнтервал: {interval}ч\nДедлайн: {deadline}ч\nЕжедневное напоминание: {reminder_hour}:00 UTC\nНапоминание до дедлайна: {reminder_before}ч\n\nСообщение:\n<blockquote>{message}</blockquote>",
         "set_interval": "Установить интервал отметки:",
         "set_deadline": "Установить дедлайн (часов после последней отметки):",
         "set_reminder_hour": "Установить время ежедневного напоминания (UTC):",
