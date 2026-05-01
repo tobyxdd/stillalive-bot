@@ -42,6 +42,8 @@ async def send_daily_reminders(context: ContextTypes.DEFAULT_TYPE):
         if user.get("reminder_hour") == current_hour:
             if not db.has_watchers(user["user_id"]):
                 continue
+            if db.is_duress_suppressed(user["user_id"]):
+                continue
             ln = user.get("language", "en")
             try:
                 await context.bot.send_message(user["user_id"], t(ln, "reminder_daily"))

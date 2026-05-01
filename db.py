@@ -55,6 +55,12 @@ MIGRATIONS = [
     CREATE INDEX idx_checkin_logs_user ON checkin_logs(user_id);
     CREATE INDEX idx_checkin_logs_ts ON checkin_logs(timestamp);
     """,
+    # v4 → v5: add dedicated duress PIN and reminder suppression state
+    """
+    ALTER TABLE users ADD COLUMN duress_pin_hash TEXT;
+    ALTER TABLE users ADD COLUMN duress_active_at TIMESTAMP;
+    UPDATE users SET duress_mode = 0;
+    """,
 ]
 
 
@@ -107,7 +113,7 @@ def upsert_user(user_id: int, username: str = None, **fields):
 def checkin(user_id: int):
     with get_db() as conn:
         conn.execute(
-            "UPDATE users SET last_checkin = ?, alerted = 0 WHERE user_id = ?",
+            "UPDATE users SET last_checkin = ?, alerted = 0, duress_active_at = NULL WHERE user_id = ?",
             (datetime.now(timezone.utc), user_id),
         )
 
@@ -142,7 +148,10 @@ def get_users_past_deadline() -> list[dict]:
 
 def mark_alerted(user_id: int):
     with get_db() as conn:
-        conn.execute("UPDATE users SET alerted = 1 WHERE user_id = ?", (user_id,))
+        conn.execute(
+            "UPDATE users SET alerted = 1, duress_active_at = NULL WHERE user_id = ?",
+            (user_id,),
+        )
 
 
 def get_users_needing_deadline_reminder() -> list[dict]:
@@ -152,6 +161,10 @@ def get_users_needing_deadline_reminder() -> list[dict]:
             SELECT * FROM users 
             WHERE last_checkin IS NOT NULL 
               AND alerted = 0
+              AND (
+                  duress_active_at IS NULL
+                  OR datetime(duress_active_at) < datetime(last_checkin)
+              )
               AND datetime(last_checkin, '+' || (deadline_hours - reminder_before) || ' hours') < datetime('now')
               AND datetime(last_checkin, '+' || deadline_hours || ' hours') > datetime('now')
         """).fetchall()
@@ -283,25 +296,72 @@ def verify_pin(user_id: int, pin: str) -> bool:
 def clear_pin(user_id: int):
     with get_db() as conn:
         conn.execute(
-            "UPDATE users SET pin_hash = NULL, duress_mode = 0 WHERE user_id = ?",
+            "UPDATE users SET pin_hash = NULL, duress_mode = 0, duress_pin_hash = NULL, duress_active_at = NULL WHERE user_id = ?",
             (user_id,),
         )
 
 
-def get_duress_mode(user_id: int) -> bool:
+def get_duress_pin_hash(user_id: int) -> str | None:
     with get_db() as conn:
         row = conn.execute(
-            "SELECT duress_mode FROM users WHERE user_id = ?", (user_id,)
+            "SELECT duress_pin_hash FROM users WHERE user_id = ?", (user_id,)
         ).fetchone()
-        return bool(row["duress_mode"]) if row else False
+        return row["duress_pin_hash"] if row else None
 
 
-def set_duress_mode(user_id: int, enabled: bool):
+def set_duress_pin(user_id: int, pin: str):
     with get_db() as conn:
         conn.execute(
-            "UPDATE users SET duress_mode = ? WHERE user_id = ?",
-            (1 if enabled else 0, user_id),
+            "UPDATE users SET duress_pin_hash = ?, duress_active_at = NULL WHERE user_id = ?",
+            (_hash_pin(user_id, pin), user_id),
         )
+
+
+def clear_duress_pin(user_id: int):
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE users SET duress_pin_hash = NULL, duress_active_at = NULL WHERE user_id = ?",
+            (user_id,),
+        )
+
+
+def verify_duress_pin(user_id: int, pin: str) -> bool:
+    stored = get_duress_pin_hash(user_id)
+    if not stored:
+        return False
+    return stored == _hash_pin(user_id, pin)
+
+
+def mark_duress_checkin(user_id: int):
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE users SET duress_active_at = ? WHERE user_id = ?",
+            (datetime.now(timezone.utc), user_id),
+        )
+
+
+def clear_duress_state(user_id: int):
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE users SET duress_active_at = NULL WHERE user_id = ?",
+            (user_id,),
+        )
+
+
+def is_duress_suppressed(user_id: int) -> bool:
+    with get_db() as conn:
+        row = conn.execute(
+            """
+            SELECT 1 FROM users
+            WHERE user_id = ?
+              AND last_checkin IS NOT NULL
+              AND duress_active_at IS NOT NULL
+              AND datetime(duress_active_at) >= datetime(last_checkin)
+              AND datetime(last_checkin, '+' || deadline_hours || ' hours') > datetime('now')
+            """,
+            (user_id,),
+        ).fetchone()
+        return row is not None
 
 
 # Admin query functions

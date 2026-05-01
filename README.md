@@ -31,7 +31,7 @@ Reminders are sent at a configurable daily time and again when the deadline is a
 - **Before deadline** — reminder X hours before the deadline is reached
 - **Alert message** — what your watchers see if you go silent
 - **PIN** — optional 4-digit PIN required to complete a check-in (entered via on-screen keypad, never exposed in chat history)
-- **Duress mode** — when enabled alongside a PIN, the bot always shows a successful check-in response regardless of what PIN is entered, but only records the check-in when the correct PIN is used. Protects against coercion.
+- **Duress PIN** — optional second PIN. The normal PIN records a real check-in. The duress PIN shows the same success response and silences reminders, but does not move the real deadline, so watchers are still alerted if that deadline is reached. Any other PIN fails normally.
 
 ## Running
 

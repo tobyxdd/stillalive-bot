@@ -148,12 +148,21 @@ async def cmd_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ],
     ]
     if has_pin:
-        duress_on = db.get_duress_mode(user_id)
+        has_duress_pin = bool(db.get_duress_pin_hash(user_id))
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    t(ln, "btn_disable_duress" if duress_on else "btn_enable_duress"),
-                    callback_data="disable_duress" if duress_on else "enable_duress",
+                    t(
+                        ln,
+                        (
+                            "btn_clear_duress_pin"
+                            if has_duress_pin
+                            else "btn_set_duress_pin"
+                        ),
+                    ),
+                    callback_data=(
+                        "clear_duress_pin" if has_duress_pin else "set_duress_pin"
+                    ),
                 )
             ]
         )
@@ -236,18 +245,18 @@ async def cb_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
             t(ln, "pin_confirm_clear", dots=_pin_dots(0)),
             reply_markup=_pin_keyboard(),
         )
-    elif data == "enable_duress":
-        context.user_data["pin_purpose"] = "enable_duress"
+    elif data == "set_duress_pin":
+        context.user_data["pin_purpose"] = "confirm_set_duress_pin"
         context.user_data["pin_digits"] = ""
         await query.edit_message_text(
-            t(ln, "pin_confirm_duress_enable", dots=_pin_dots(0)),
+            t(ln, "pin_confirm_duress_setup", dots=_pin_dots(0)),
             reply_markup=_pin_keyboard(),
         )
-    elif data == "disable_duress":
-        context.user_data["pin_purpose"] = "disable_duress"
+    elif data == "clear_duress_pin":
+        context.user_data["pin_purpose"] = "clear_duress_pin"
         context.user_data["pin_digits"] = ""
         await query.edit_message_text(
-            t(ln, "pin_confirm_duress_disable", dots=_pin_dots(0)),
+            t(ln, "pin_confirm_duress_clear", dots=_pin_dots(0)),
             reply_markup=_pin_keyboard(),
         )
     elif data.startswith("interval_"):
@@ -311,8 +320,9 @@ async def cb_pin(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "setup": "pin_setup_enter",
             "clear_pin": "pin_confirm_clear",
             "change_pin": "pin_confirm_change",
-            "enable_duress": "pin_confirm_duress_enable",
-            "disable_duress": "pin_confirm_duress_disable",
+            "confirm_set_duress_pin": "pin_confirm_duress_setup",
+            "set_duress_pin": "pin_setup_duress",
+            "clear_duress_pin": "pin_confirm_duress_clear",
         }.get(purpose, "pin_enter")
         await query.edit_message_text(
             t(ln, prompt_key, dots=_pin_dots(len(digits))),
@@ -322,6 +332,8 @@ async def cb_pin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 4 digits entered — act on purpose
     if purpose == "setup":
+        if db.verify_duress_pin(user_id, digits):
+            db.clear_duress_pin(user_id)
         db.set_pin(user_id, digits)
         context.user_data.pop("pin_purpose", None)
         context.user_data.pop("pin_digits", None)
@@ -331,9 +343,13 @@ async def cb_pin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if correct:
             db.checkin(user_id)
             db.log_checkin(user_id, True, "pin")
-        if correct or db.get_duress_mode(user_id):
-            if not correct:
-                db.log_checkin(user_id, False, "pin", "duress")
+            context.user_data.pop("pin_purpose", None)
+            context.user_data.pop("pin_digits", None)
+            now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+            await query.edit_message_text(t(ln, "checkin_done", time=now))
+        elif db.verify_duress_pin(user_id, digits):
+            db.mark_duress_checkin(user_id)
+            db.log_checkin(user_id, False, "pin", "duress")
             context.user_data.pop("pin_purpose", None)
             context.user_data.pop("pin_digits", None)
             now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -372,15 +388,38 @@ async def cb_pin(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 t(ln, "pin_wrong", dots=_pin_dots(0)),
                 reply_markup=_pin_keyboard(),
             )
-    elif purpose in ("enable_duress", "disable_duress"):
+    elif purpose == "confirm_set_duress_pin":
         if db.verify_pin(user_id, digits):
-            enabling = purpose == "enable_duress"
-            db.set_duress_mode(user_id, enabling)
+            context.user_data["pin_purpose"] = "set_duress_pin"
+            context.user_data["pin_digits"] = ""
+            await query.edit_message_text(
+                t(ln, "pin_setup_duress", dots=_pin_dots(0)),
+                reply_markup=_pin_keyboard(),
+            )
+        else:
+            context.user_data["pin_digits"] = ""
+            await query.edit_message_text(
+                t(ln, "pin_wrong", dots=_pin_dots(0)),
+                reply_markup=_pin_keyboard(),
+            )
+    elif purpose == "set_duress_pin":
+        if db.verify_pin(user_id, digits):
+            context.user_data["pin_digits"] = ""
+            await query.edit_message_text(
+                t(ln, "duress_pin_matches_true", dots=_pin_dots(0)),
+                reply_markup=_pin_keyboard(),
+            )
+        else:
+            db.set_duress_pin(user_id, digits)
             context.user_data.pop("pin_purpose", None)
             context.user_data.pop("pin_digits", None)
-            await query.edit_message_text(
-                t(ln, "duress_enabled" if enabling else "duress_disabled")
-            )
+            await query.edit_message_text(t(ln, "duress_pin_set"))
+    elif purpose == "clear_duress_pin":
+        if db.verify_pin(user_id, digits):
+            db.clear_duress_pin(user_id)
+            context.user_data.pop("pin_purpose", None)
+            context.user_data.pop("pin_digits", None)
+            await query.edit_message_text(t(ln, "duress_pin_cleared"))
         else:
             context.user_data["pin_digits"] = ""
             await query.edit_message_text(
@@ -631,7 +670,8 @@ async def _admin_user(update: Update, user_id_str: str):
 
     last = user.get("last_checkin") or "never"
     has_pin = "yes" if user.get("pin_hash") else "no"
-    duress = "yes" if user.get("duress_mode") else "no"
+    has_duress_pin = "yes" if user.get("duress_pin_hash") else "no"
+    duress_active = "yes" if db.is_duress_suppressed(uid) else "no"
 
     lines = [
         f"User: {get_name(user)} ({uid})",
@@ -646,7 +686,8 @@ async def _admin_user(update: Update, user_id_str: str):
         f"Last check-in: {last}",
         f"Alerted: {'yes' if user.get('alerted') else 'no'}",
         f"PIN: {has_pin}",
-        f"Duress mode: {duress}",
+        f"Duress PIN: {has_duress_pin}",
+        f"Duress suppression active: {duress_active}",
         "",
         f"Watchers ({len(watchers)}): {', '.join(watcher_names) or 'none'}",
     ]
